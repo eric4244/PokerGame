@@ -5,7 +5,6 @@ from userInteraction import userMove
 def runRiver(gameState):
     # Deal the river card
     gameState.dealCommunityCard()
-    print("River card dealt:")
     print(str(gameState.communityCards[-1]))  # Display the newly dealt river card
 
     # Begin a round of betting, starting with the player left to the dealer (small blind if active)
@@ -20,7 +19,6 @@ def runRiver(gameState):
 
     # Tracks the player who played first or the last raise
     lastAggressivePlayer = lastPlayerIndex
-    print(f'Last aggressive player is: {lastAggressivePlayer}')
 
     while bettingContinues:
         currentPlayer = gameState.players[currentPlayerIndex]
@@ -54,7 +52,7 @@ def runRiver(gameState):
             betThisRound = True
             print(f"{currentPlayer.name} goes all-in with {currentPlayer.stackSize}.")
         else:
-            print("Somehow a move wasn't selected in turn")
+            print("\nSomehow a move wasn't selected in turn\n")
 
         # Reset firstRound after all players have acted once
         if firstRound and currentPlayerIndex == lastPlayerIndex:
@@ -62,7 +60,6 @@ def runRiver(gameState):
 
         # Ending betting if currentPlayerIndex is the last player to bet
         if currentPlayerIndex == lastAggressivePlayer and not firstRound and not betThisRound:
-            print("Ending betting round.")
             bettingContinues = False
 
         # Advancing to next player
@@ -71,7 +68,9 @@ def runRiver(gameState):
 
     # Prepare for showdown if more than one player is still in hand
     if len([p for p in gameState.players if p.inHand]) > 1:
-        print("Moving to showdown.")
+        print("\n\n")
+        print("|           <----------------------------------        SHOWDOWN STARTS!!        ----------------------------------------->           |")
+        print("\n\n")
         # Call the showdown function to determine the winner
         gameState.showdown()
     else:

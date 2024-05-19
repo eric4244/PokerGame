@@ -19,13 +19,11 @@ def runPreFlop(gameState):
 
     # Tracks the last player to raise or initially post the big blind
     lastAggressivePlayer = bigBlindIndex
-    print(f'Last aggressive player is: {lastAggressivePlayer}')
 
     betThisRound = False
 
     while bettingContinues:
         currentPlayer = gameState.players[currentPlayerIndex]
-        print(f"Player {currentPlayer.name}'s turn. Index: {currentPlayerIndex}")
 
         if not currentPlayer.inHand or currentPlayer.stackSize == 0:
             print(f"{currentPlayer.name} is not in hand or has 0 stack, skipping...")
@@ -65,11 +63,8 @@ def runPreFlop(gameState):
 
         # Ending betting if currentPlayerIndex is the last player to bet
         if currentPlayerIndex == lastAggressivePlayer and not firstRound and not betThisRound:
-            print("Ending betting round.")
             bettingContinues = False
 
         # Advancing to next player and resting bet variable
         currentPlayerIndex = (currentPlayerIndex + 1) % len(gameState.players)
         betThisRound = False
-
-    print("Preflop completed!")

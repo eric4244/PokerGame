@@ -5,7 +5,6 @@ from userInteraction import userMove
 def runFlop(gameState):
     # Reveal the flop cards
     gameState.dealCommunityCard(3)
-    print("Flop cards dealt:")
     print(', '.join(str(card) for card in gameState.communityCards[-3:]))
 
     # Begin a round of betting, starting with the player left to the dealer (small blind if active)
@@ -20,11 +19,9 @@ def runFlop(gameState):
 
     # Tracks the player who played first or the last raise
     lastAggressivePlayer = lastPlayerIndex
-    print(f'Last aggressive player is: {lastAggressivePlayer}')
 
     while bettingContinues:
         currentPlayer = gameState.players[currentPlayerIndex]
-        print(f"Player {currentPlayer.name}'s turn. Index: {currentPlayerIndex}")
 
         # Check if player is still active in the hand
         if not currentPlayer.inHand or currentPlayer.stackSize == 0:
@@ -62,11 +59,8 @@ def runFlop(gameState):
 
         # Ending betting if currentPlayerIndex is the last player to bet
         if currentPlayerIndex == lastAggressivePlayer and not firstRound and not betThisRound:
-            print("Ending betting round.")
             bettingContinues = False
 
         # Advancing to next player
         currentPlayerIndex = (currentPlayerIndex + 1) % len(gameState.players)
         betThisRound = False
-
-    print("Flop completed!")

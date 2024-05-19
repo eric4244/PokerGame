@@ -1,5 +1,6 @@
 import itertools
 import random
+import os
 
 from cardClass import createCardFromString
 from handRankings import calculateHandRank, classifyHand
@@ -73,7 +74,6 @@ class GameState:
     def playHand(self):
         self.dealPlayerCards()
         self.preflop()
-        print("Hey we made it past the flop")
         self.flop()
         self.turn()
         self.river()
@@ -87,17 +87,36 @@ class GameState:
             betSize, action = compMove(currentPlayer.getCards(), self.communityCards, 'preflop',
                                        currentPlayer.stackSize, self.currentBet)
         return betSize, action
+    
+    def clearScreen(self):
+        # Check if the operating system is Windows
+        if os.name == 'nt':
+            os.system('cls')  # Clear screen for Windows
+        else:
+            os.system('clear')  # Clear screen for Unix/Linux/Mac
 
     def preflop(self):
+        self.clearScreen()
+        print("|           <----------------------------------       FLOP CARDS!!       ----------------------------------------->           |")
+        print("\n\n")
         runPreFlop(self)
 
     def flop(self):
+        self.clearScreen()
+        print("|           <----------------------------------        TURN CARDS!!         ----------------------------------------->           |")
+        print("\n\n")
         runFlop(self)
 
     def turn(self):
+        self.clearScreen()
+        print("|           <----------------------------------        RIVER CARDS!!         ----------------------------------------->           |")
+        print("\n\n")
         runTurn(self)
 
     def river(self):
+        self.clearScreen()
+        print("|           <----------------------------------        BETTING OVER!!        ----------------------------------------->           |")
+        print("\n\n")
         runRiver(self)
         self.showdown()
 
