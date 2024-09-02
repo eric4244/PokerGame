@@ -4,7 +4,7 @@ class Card:
         self.suit = suit
 
     def __str__(self):
-        return f"{self.rank} of {self.suit}"
+        return f"{self.rank}{self.suit[0]}"
 
     def to_shorthand(self):
         # Converts rank and suit to shorthand notation

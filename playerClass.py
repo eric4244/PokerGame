@@ -7,6 +7,7 @@ class Player:
         self.stackSize = stackSize
         self.cards = []
         self.inHand = True
+        self.is_active = True  # Added this attribute to track if the player is active in the current hand
         self.isBusted = False
         self.currentBet = 0
         self.totalContribution = 0
@@ -22,10 +23,13 @@ class Player:
     # Clears the cards after hand is over
     def clearCards(self):
         self.cards = []
+        self.inHand = True  # Reset inHand status for new hand
+        self.is_active = True  # Reset is_active status for new hand
 
     # Removing player from hand
     def fold(self):
         self.inHand = False
+        self.is_active = False  # Mark as inactive if folded
         self.lastAction = 'fold'
 
     # Marking player as busted
@@ -48,6 +52,7 @@ class Player:
 
     def allIn(self):
         self.bet(self.stackSize)
+        self.is_active = False  # Mark as inactive if all-in
         self.lastAction = 'all-in'
 
     def check(self):

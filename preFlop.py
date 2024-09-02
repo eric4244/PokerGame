@@ -3,6 +3,8 @@ from userInteraction import userMove
 
 
 def runPreFlop(gameState):
+    """Runs the pre-flop phase of the game, handling blinds and initial betting."""
+
     currentPlayerIndex = (gameState.dealerPosition + 3) % len(gameState.players)
     firstRound = True
     bettingContinues = True
@@ -10,6 +12,7 @@ def runPreFlop(gameState):
     smallBlindIndex = (gameState.dealerPosition + 1) % len(gameState.players)
     bigBlindIndex = (gameState.dealerPosition + 2) % len(gameState.players)
 
+    # Post blinds
     gameState.players[smallBlindIndex].bet(gameState.blinds[0])
     gameState.players[bigBlindIndex].bet(gameState.blinds[1])
     gameState.currentBet = gameState.blinds[1]
@@ -17,26 +20,31 @@ def runPreFlop(gameState):
     print(f"Small blind of {gameState.blinds[0]} posted by {gameState.players[smallBlindIndex].name}")
     print(f"Big blind of {gameState.blinds[1]} posted by {gameState.players[bigBlindIndex].name}")
 
-    # Tracks the last player to raise or initially post the big blind
     lastAggressivePlayer = bigBlindIndex
-
     betThisRound = False
+
+    # Ensure each player has two cards
+    for player in gameState.players:
+        if player.is_active:
+            if len(player.cards) != 2:  # Correct reference to 'cards' instead of 'hand'
+                player.cards = [gameState.deck.pop(), gameState.deck.pop()]  # Deal two cards
+            print(f"{player.name} has been dealt {player.cards}")
 
     while bettingContinues:
         currentPlayer = gameState.players[currentPlayerIndex]
 
-        if not currentPlayer.inHand or currentPlayer.stackSize == 0:
+        if not currentPlayer.is_active or currentPlayer.stackSize == 0:
             print(f"{currentPlayer.name} is not in hand or has 0 stack, skipping...")
             currentPlayerIndex = (currentPlayerIndex + 1) % len(gameState.players)
             continue
 
         print(f"Current bet: {gameState.currentBet}, {currentPlayer.name}'s stack: {currentPlayer.stackSize}")
 
-        # Player move
         amount, move = gameState.getPlayerMove(currentPlayer)
         print(f"{currentPlayer.name} decides to {move} with amount {amount}")
 
         if move == "fold":
+            currentPlayer.is_active = False
             currentPlayer.fold()
         elif move == "check":
             currentPlayer.check()
@@ -48,23 +56,21 @@ def runPreFlop(gameState):
             gameState.currentBet = amount
             lastAggressivePlayer = currentPlayerIndex
             betThisRound = True
-            print(f"{currentPlayer.name} raises to {gameState.currentBet}. New last aggressive player is index {lastAggressivePlayer}.")
+            print(
+                f"{currentPlayer.name} raises to {gameState.currentBet}. New last aggressive player is index {lastAggressivePlayer}.")
         elif move == "all-in":
             currentPlayer.allIn()
             lastAggressivePlayer = currentPlayerIndex
             betThisRound = True
             print(f"{currentPlayer.name} goes all-in with {currentPlayer.stackSize}.")
         else:
-            print("Somehow a move wasn't selected in preflop")
+            print(f"Error: Invalid move '{move}' in pre-flop phase.")
 
-        # Reset firstRound after the big blind has acted once
         if firstRound and currentPlayerIndex == bigBlindIndex:
             firstRound = False
 
-        # Ending betting if currentPlayerIndex is the last player to bet
         if currentPlayerIndex == lastAggressivePlayer and not firstRound and not betThisRound:
             bettingContinues = False
 
-        # Advancing to next player and resting bet variable
         currentPlayerIndex = (currentPlayerIndex + 1) % len(gameState.players)
         betThisRound = False
