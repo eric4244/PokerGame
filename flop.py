@@ -3,9 +3,12 @@ from userInteraction import userMove
 
 
 def runFlop(gameState):
+    gameState.gameStage = "flop"
+    gameState.currentBet = 0
     # Reveal the flop cards
     gameState.dealCommunityCard(3)
     print(', '.join(str(card) for card in gameState.communityCards[-3:]))
+    print(f"\n")
 
     # Begin a round of betting, starting with the player left to the dealer (small blind if active)
     currentPlayerIndex = (gameState.dealerPosition + 1) % len(gameState.players)
@@ -30,26 +33,61 @@ def runFlop(gameState):
 
         # Player Move
         amount, move = gameState.getPlayerMove(currentPlayer)
-        print(f"{currentPlayer.name} decides to {move} with amount {amount}")
+        print(f"{currentPlayer.name} decides to {move} with amount {amount} \n")
 
         if move == "fold":
+            currentPlayer.is_active = False
             currentPlayer.fold()
         elif move == "check":
-            currentPlayer.check()
+            # Check is only allowed if the current bet is 0
+            if gameState.currentBet == 0:
+                currentPlayer.check()
+            else:
+                print(f"Error: {currentPlayer.name} tried to check, but the current bet is {gameState.currentBet}.")
         elif move == "call":
-            currentPlayer.call(gameState.currentBet - currentPlayer.currentBet)
+            # The player calls the current bet minus what they've already contributed
+            callAmount = gameState.currentBet - currentPlayer.currentBet
+            currentPlayer.stackSize -= callAmount
+            gameState.pot += callAmount
+            currentPlayer.currentBet = gameState.currentBet  # Update player's total contribution
+            currentPlayer.call(callAmount)
         elif move == "raise":
-            raiseAmount = amount - gameState.currentBet
-            currentPlayer.raiseBet(raiseAmount)
+            if gameState.currentBet == 0:
+                additionalContribution = amount
+            else:
+                # Calculate the additional contribution required for the raise
+                additionalContribution = amount - currentPlayer.currentBet  # The difference between new bet and current contribution
+
+            # Check if the raise is valid
+            if additionalContribution <= 0:
+                print(f"Error: Raise amount {amount} must be greater than the current bet {gameState.currentBet}.")
+                continue
+
+            # Deduct only the additional amount from the player's stack
+            currentPlayer.stackSize -= additionalContribution
+
+            # Update the player's total bet for this round
+            currentPlayer.currentBet = amount
+
+            # Update the game state's current bet to reflect the new raise
             gameState.currentBet = amount
+
+            # Update the pot with the additional contribution
+            gameState.pot += additionalContribution
+
+            # Track last aggressive player
             lastAggressivePlayer = currentPlayerIndex
             betThisRound = True
-            print(f"{currentPlayer.name} raises to {gameState.currentBet}. New last aggressive player is index {lastAggressivePlayer}.")
+
+            print(
+                f"{currentPlayer.name} raises to {gameState.currentBet}. New stack: {currentPlayer.stackSize}, New pot: {gameState.pot}.")
         elif move == "all-in":
+            allInAmount = currentPlayer.stackSize
             currentPlayer.allIn()
+            gameState.pot += allInAmount
             lastAggressivePlayer = currentPlayerIndex
             betThisRound = True
-            print(f"{currentPlayer.name} goes all-in with {currentPlayer.stackSize}.")
+            print(f"{currentPlayer.name} goes all-in with {allInAmount}.")
         else:
             print("Somehow a move wasn't selected in flop")
 

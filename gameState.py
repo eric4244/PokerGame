@@ -1,4 +1,6 @@
 # Import game phase functions
+import os
+
 from preFlop import runPreFlop  # Function handling the pre-flop phase
 from flop import runFlop        # Function handling the flop phase
 from turn import runTurn        # Function handling the turn phase
@@ -21,9 +23,10 @@ class GameState:
     def __init__(self, players, initialStack):
         self.players = players  # List of Player objects
         self.hand = []
-        self.pot = 0
+        self.pot = int(0.02 * initialStack) + (int(0.02 * initialStack) / 2)
         self.communityCards = []
-        self.current_bet = 0
+        self.current_bet = int(0.02 * initialStack)
+        self.gameStage = "preflop"
         self.deck = self.createFullDeck()  # Assumes a method to create a deck
         self.initialStack = initialStack
         self.blinds = self.calculateBlinds(initialStack)  # Method to set blinds
@@ -49,10 +52,11 @@ class GameState:
         self.last_aggressive_player = None
 
         for player in self.players:
-            player.current_bet = 0
+            player.currentBet = 0
             player.is_active = True  # Reactivate all players for the new round
 
         self.communityCards = []  # Reset community cards for the new round
+        self.gameStage = "preflop"
 
     def updateGameState(self):
         """Update the game state based on current players' statuses."""
@@ -60,7 +64,7 @@ class GameState:
 
         if len(active_players) == 1:
             winner = active_players[0]
-            winner.stack += self.pot
+            winner.stackSize += self.pot
             print(f"{winner.name} wins the pot of {self.pot}!")
             self.pot = 0
             self.resetRound()
@@ -78,11 +82,27 @@ class GameState:
             self.updateBlinds()
 
     def postBlinds(self):
+        # Calculate small and big blind positions
         smallBlindIndex = (self.dealerPosition + 1) % len(self.players)
         bigBlindIndex = (self.dealerPosition + 2) % len(self.players)
-        self.players[smallBlindIndex].bet(self.blinds[0])
-        self.players[bigBlindIndex].bet(self.blinds[1])
-        self.current_bet = self.blinds[1]
+
+        # Post small blind
+        smallBlindAmount = self.blinds[0]
+        bigBlindAmount = self.blinds[1]
+
+        self.players[smallBlindIndex].stackSize -= smallBlindAmount
+        self.players[smallBlindIndex].current_bet = smallBlindAmount
+        self.pot += smallBlindAmount  # Add small blind to the pot
+        print(f"Small blind of {smallBlindAmount} posted by {self.players[smallBlindIndex].name}")
+
+        # Post big blind
+        self.players[bigBlindIndex].stackSize -= bigBlindAmount
+        self.players[bigBlindIndex].current_bet = bigBlindAmount
+        self.pot += bigBlindAmount  # Add big blind to the pot
+        print(f"Big blind of {bigBlindAmount} posted by {self.players[bigBlindIndex].name}")
+
+        # Set the current bet to the big blind amount
+        self.currentBet = bigBlindAmount
 
     def dealCommunityCard(self, count=1):
         for _ in range(count):
@@ -103,26 +123,43 @@ class GameState:
                 player.setCards(firstCard, secondCard)
                 print(f"{player.name} has been dealt: {firstCard}, {secondCard}")
 
+    def NumActivePlayers(self):
+        active_players = [player for player in self.players if player.is_active]
+        return len(active_players)
+
     def playHand(self):
         """Manages the overall flow of the game hand."""
         self.initializeDeck()  # Initialize and shuffle the deck at the start of each hand
         runPreFlop(self)
 
-        if self.checkForActivePlayers():
+        if self.NumActivePlayers() > 1:
+            self.current_bet = 0
             runFlop(self)
-        if self.checkForActivePlayers():
+        if self.NumActivePlayers() > 1:
+            self.current_bet = 0
             runTurn(self)
-        if self.checkForActivePlayers():
+        if self.NumActivePlayers() > 1:
+            self.current_bet = 0
             runRiver(self)
-        if self.checkForActivePlayers():
+        if self.NumActivePlayers() > 1:
             self.showdown()
 
     def getPlayerMove(self, currentPlayer):
         if currentPlayer.isHuman:
+            print(f"Your hand: {', '.join(str(card) for card in currentPlayer.getCards())}")
             betSize, action = userMove(self.current_bet, currentPlayer.stackSize)
         else:
-            betSize, action = compMove(currentPlayer.getCards(), self.communityCards, 'preflop',
+            betSize, action = compMove(currentPlayer, currentPlayer.getCards(), self.communityCards, self.gameStage,
                                        currentPlayer.stackSize, self.current_bet)
+
+        if betSize > 0:
+            self.pot += betSize
+            currentPlayer.stackSize -= betSize
+            currentPlayer.currentBet += betSize
+
+        # Printing the current pot after move
+        print(f"Current pot: {self.pot}")
+
         return betSize, action
 
     def clearScreen(self):
@@ -135,7 +172,7 @@ class GameState:
         active_players = [p for p in self.players if p.is_active]
         if len(active_players) > 1:
             winner = self.determineWinner(active_players)
-            winner.stack += self.pot
+            winner.stackSize += self.pot
             print(f"{winner.name} wins the pot of {self.pot} with {winner.hand}")
         else:
             print("Error: Not enough players in showdown.")
@@ -150,7 +187,7 @@ class GameState:
         for player in self.players:
             player.clearCards()
             player.inHand = not player.isBusted
-            player.current_bet = 0
+            player.currentBet = 0
         self.dealerPosition = (self.dealerPosition + 1) % len(self.players)
         self.dealPlayerCards()
         self.postBlinds()
