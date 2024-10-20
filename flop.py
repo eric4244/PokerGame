@@ -56,7 +56,7 @@ def runFlop(gameState):
                 additionalContribution = amount
             else:
                 # Calculate the additional contribution required for the raise
-                additionalContribution = amount - currentPlayer.currentBet  # The difference between new bet and current contribution
+                additionalContribution = amount + currentPlayer.currentBet  # The difference between new bet and current contribution
 
             # Check if the raise is valid
             if additionalContribution <= 0:
@@ -64,7 +64,7 @@ def runFlop(gameState):
                 continue
 
             # Deduct only the additional amount from the player's stack
-            currentPlayer.stackSize -= additionalContribution
+            # currentPlayer.stackSize -= amount
 
             # Update the player's total bet for this round
             currentPlayer.currentBet = amount
@@ -73,7 +73,7 @@ def runFlop(gameState):
             gameState.currentBet = amount
 
             # Update the pot with the additional contribution
-            gameState.pot += additionalContribution
+            # gameState.pot += amount
 
             # Track last aggressive player
             lastAggressivePlayer = currentPlayerIndex

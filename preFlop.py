@@ -69,7 +69,7 @@ def runPreFlop(gameState):
                 continue
 
             # Deduct only the additional amount from the player's stack
-            currentPlayer.stackSize -= additionalContribution
+            # currentPlayer.stackSize -= amount
 
             # Update the player's total bet for this round
             currentPlayer.currentBet = amount
@@ -78,7 +78,7 @@ def runPreFlop(gameState):
             gameState.currentBet = amount
 
             # Update the pot with the additional contribution
-            gameState.pot += additionalContribution
+            # gameState.pot += amount
 
             # Track last aggressive player
             lastAggressivePlayer = currentPlayerIndex
